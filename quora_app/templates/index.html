@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Quora</h1>
+  {% if user.is_authenticated %}
+    <p>Welcome, {{ user.username }}! <a href="{% url 'logout' %}">Logout</a></p>
+    <h2>Post a Question</h2>
+    <form method="post" action="{% url 'create_question' %}">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Submit</button>
+    </form>
+  {% else %}
+    <p><a href="{% url 'login' %}">Login</a> to post a question.</p>
+  {% endif %}
+
+  <h2>Questions</h2>
+  {% for question in questions %}
+    <div>
+      <h3>{{ question.question_text }}</h3>
+      <p>Posted by: {{ question.created_by.username }}</p>
+      {% if user.is_authenticated %}
+        <h4>Answer the Question</h4>
+        <form method="post" action="{% url 'answer_question' question.id %}">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit">Submit</button>
+        </form>
+      {% endif %}
+      <h4>Answers</h4>
+      {% for answer in question.answer_set.all %}
+        <div>
+          <p>{{ answer.answer_text }}</p>
+          {% if user.is_authenticated %}
+            {% if user not in answer.like_set.all.user %}
+              <a href="{% url 'like_answer' answer.id %}">Like</a>
+            {% else %}
+              <a href="{% url 'like_answer' answer.id %}">Unlike</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      {% empty %}
+        <p>No answers yet.</p>
+      {% endfor %}
+    </div>
+  {% empty %}
+    <p>No questions yet.</p>
+  {% endfor %}
+{% endblock %}
